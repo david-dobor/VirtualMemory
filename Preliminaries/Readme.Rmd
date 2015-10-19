@@ -1,0 +1,170 @@
+## Week 1 Progress
+
+*Environment used in this project:* 32-bit Linux, kernel version 3.19, and C.
+
+## Adding a System Call to a Linux Kernel
+####  Preliminary Steps
++ Download and extract the Linux kernel.
+    - The version of the Linux kernel used in this project is 3.19.0, downloaded from 
+    <https://www.kernel.org/pub/linux/kernel/v3.0>:
+    
+         ```
+          wget https://www.kernel.org/pub/linux/kernel/v3.0/linux-3.19.1.tar.gz
+         ```
+         
+    - Extract it into `/usr/src` directory:
+    
+         ```
+          sudo tar -xvzf linux-3.19.1.tar.gz -C/usr/src/
+         ```
+         
++ Take a look at the source code. In what follows, the source files to edit are 
+  `syscall_32.tbl`, found in `/usr/src/linux-3.19/arch/x86/syscalls/`, and
+  `syscalls.h`, found in  `/usr/src/linux-3.19/include/linux/`. 
+  
+  
+#### Write a system call   
+
++ `cd /usr/src/linux-3.19` and add a new directory `mkdir MySyscalls`. This is
+       where the new system call will live. 
+   
++ Create a new file, say  `hello.c`, in this directory. This  file contains the  
+    function that will be called when the new system call from user space is issued.
+    The function is fairly simple - it prints (the slightly modified) infamous greeting:
+   
+         #include <Linux/kernel.h>
+
+         asmlinkage long sys_hello(void)
+         {
+             printk(“Hello syscall World!\n”);
+             return 0;
+         }
+
+        
+    (This is the same `Hello World` example as found in [this blogpost](https://tssurya.wordpress.com/2014/08/19/adding-a-hello-world-system-call-to-linux-kernel-3-16-0/). More interesting examples, like `syscalls` that count the number of running processes can also be found in this directory. More on this below.)
+
+
+#### Update the necessary tables, header files in the Linux source code.
+- `syscalls` entries are found in this table:
+  `/usr/src/linux-3.19/arch/x86/syscalls/syscall_32.tbl`. To add a new `syscall` to this table, (do this as `root`),  insert the following line:
+
+         359   i386  hello		sys_hello
+  here the first number 
+  is the number of the call, and should be one greater than the last (and largest) 
+  number in the table; mine was 358.
+  `hello` is the name of the new syscall and `sys_hello` is the function
+  it contains (see the above `hello.c` file) . Preceding the function name with 
+  `sys` is just a convention.
+  
+- Next, edit `syscalls.h` header file, which is in  `/usr/src/linux-3.19/include/linux/syscalls.h`. This is where the prototype for 
+  the new system call will live. To add the prototype, insert the following line before 
+  the `#endif` statement at the very bottom of the `syscalls.h` header file: 
+
+         asmlinkage long sys_hello(void);
+
+#### Update the `makefile`
+- First, create a `Makefile` in the newly created directory of system calls (in the above example, this was `MySyscalls`). To keep things simple, add just this single line to the new `Makefile`, for now:
+
+         obj-y := hello.o
+
+- Next, edit the actual kernel `Makefile`, which can be found in the kernel directory
+`/usr/src/linux-3.19`. Look for `core-y` line in this `Makefile`. This lists the 
+directories the compiler looks for when compiling files into the Linux core. Add 
+directory `MySyscalls` to it. (in my `Makefile` this is found on line `882`; it 
+should be on the same line in the `3.19 kernel` version). The changed line looks like this:
+
+         core-y  += kernel/ mm/ fs/ ipc/ security/ crypto /block/ MySyscalls/
+
+
+#### Compile the kernel
+- Before compiling, do:
+
+         sudo apt-get install gcc
+         sudo apt-get install libncurses5-dev
+         sudo apt-get update
+         sudo apt-get upgrade
+         
+- Next, configure the kernel (It may be easiest to use the old configuration):
+
+         sudo make oldconfig
+         
+     (alternatively, do `sudo make menuconfig` and choose the desired options)
+
+- Next, compile the kernel. From the `/usr/src/linux-3.19` directory say
+  (`-j` option sets the "amount parallelism". Set this option to the number of cores on your processor + 1):
+
+         make -j5 
+  (And wait. Grab lunch. Maybe even dinner. This may take some time.)
+  
+- Finally, install the kernel:
+
+         sudo make modules_install install
+         
+
+#### Boot into the newly compled kernel
+
+After the installation, the following new files will be found in the `/boot/`
+directory:
+
+         System.map-3.19.0
+         vmlinuz-3.19.0
+         initrd.img-3.19.0
+         config-3.19.0
+
+Reboot the system by saying `shutdown -r now` at the prompt. Make sure you're
+booted into the new kernel (check by saying `uname -r` at the prompt).
+
+
+**Note:** If the boot menu doesn't display when the machine restarts, edit 
+`/etc/default/grub` file by commenting out (i.e. by placing the "#" symbol at 
+the start of) the line that says `GRUB_HIDDEN_TIMEOUT=0`. Then save changes and
+run `sudo update-grub`.
+ 
+
+
+#### Test the `syscall`
+
+Finally, call `sys_hello` from the user space by writing the following:
+
++ Create a new directory, such as `MySysCallTests`, anywhere on the system.
++ Add the following test function, compile and run it.
+
+        #include <stdio.h>
+        #include <linux/kernel.h>
+        #include <sys/syscall.h>
+        #include <unistd.h>
+
+        int main()
+        {
+            long int sysreturn = syscall(359);
+            printf(“My syscall sys_hello returned %ld\n”, sysreturn);
+            return 0;
+        }
+
++ If you see the message saying that your syscall returned 0, smile.
+
++ Now check the contents of the kernel log buffer by running the command:
+
+        dmesg
+        
++ Next, observe that your message is indeed there, in the log. You've just added 
+  a system call to your kernel. Become happy! Go get some dinner. 
+
+
+
+
+
+
+
+
+
+
+         
+       ```  
+
+
+
+
+         
+         
+ 
