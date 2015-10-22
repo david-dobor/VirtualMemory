@@ -1,0 +1,11 @@
+CC=gcc
+CFLAGS=-g -Wall -std=c99
+
+%.o: %.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+user: user.o 
+	$(CC) -o user user.o
+
+clean:
+	rm *.*~ *.o *~
