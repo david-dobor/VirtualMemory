@@ -1,4 +1,4 @@
-## A Project on Virtual Memory, in Progress...
+## VirtMemory
 
 
 The following has been completed: 
@@ -8,8 +8,12 @@ The following has been completed:
 [How to add a system call to the linux kernel](https://github.com/david-dobor/VirtualMemory/tree/master/Preliminaries) (kernel version 3.19, 32 bit.)
 
 
-#### `src/syscalls` has the system calls; `src/examples`: sample user-space 
-programsthat invoke the system calls.   
+#### `src`
+
++ `src/syscalls` has the system calls; 
+
++ `src/examples`: sample user-space 
+   programs that invoke the system calls.   
 
 
 ### Kernel Modules (kMods directory)
