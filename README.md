@@ -8,9 +8,11 @@ The following has been completed:
 [How to add a system call to the linux kernel](https://github.com/david-dobor/VirtualMemory/tree/master/Preliminaries) (kernel version 3.19, 32 bit.)
 
 
-### In this directory, so far:
+#### `src/syscalls` has the system calls; `src/examples`: sample user-space 
+programsthat invoke the system calls.   
 
-### Kernel Modules
+
+### Kernel Modules (kMods directory)
 
 + `meminfo.c` iterates through all running processes and finds the
    process with a given `pid`; Prints address information for the
